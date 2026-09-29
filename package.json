@@ -2,6 +2,7 @@
   "name": "liveboard",
   "version": "0.0.0",
   "private": true,
+  "packageManager": "pnpm@10.33.2",
   "type": "module",
   "description": "足球训练图转战术板动画",
   "scripts": {

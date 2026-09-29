@@ -1,5 +1,6 @@
 import { describeConfig, recognizeDrill, type AiConfig, type PageImage, type VisionProvider } from '@drill/ai'
 import { formatIssues } from '@drill/schema'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import type { Db } from './db/index.js'
@@ -12,6 +13,9 @@ import { RateLimiter } from './rateLimit.js'
 const MAX_BYTES_PER_PAGE = 8 * 1024 * 1024
 /** 一个训练最多跨几页。 */
 const MAX_PAGES = 6
+
+/** Vite 产物的文件名形如 index-BJSZkO62.js，改了内容 hash 就会变。 */
+const HASHED_ASSET = /-[A-Za-z0-9_-]{8,}\.(js|css)$/
 
 const ALLOWED_MEDIA_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 
@@ -27,6 +31,13 @@ export interface AppOptions {
   maxRetries?: number
   /** 视频导出队列。不传就不注册导出接口（测试里大多用不到）。 */
   exportQueue?: ExportQueue
+  /**
+   * 前端构建产物目录。传了就由本服务一起托管，前后端同源、只开一个端口。
+   *
+   * 同源是 PWA 的前提（Service Worker 只能控制同源页面），
+   * 也省掉了生产环境再配一层反向代理做 /api 转发。
+   */
+  webDist?: string
 }
 
 export function createApp(options: AppOptions) {
@@ -171,6 +182,42 @@ export function createApp(options: AppOptions) {
       }
     })
   })
+
+  /**
+   * 托管前端。必须放在所有 /api 路由之后注册，否则静态兜底会把接口吃掉。
+   *
+   * 路由是 hash 形式（#/drill/xxx），所以不需要 history fallback：
+   * 浏览器请求的路径永远是 /，hash 部分不发给服务端。
+   */
+  if (options.webDist !== undefined) {
+    const root = options.webDist
+
+    /**
+     * 带内容 hash 的资源可以长期缓存，index.html 绝对不能。
+     *
+     * 缓存头必须在外层中间件里、等 serveStatic 生成响应之后再设：
+     * serveStatic 的 onFound 里用 c.header() 设的头会被最终 Response 丢掉（实测）。
+     */
+    app.use('/assets/*', async (c, next) => {
+      await next()
+      if (c.res.status === 200 && HASHED_ASSET.test(c.req.path)) {
+        c.res.headers.set('Cache-Control', 'public, max-age=31536000, immutable')
+      }
+    })
+
+    /**
+     * 不存在的接口要回 404 JSON，不能落到下面的 SPA 兜底。
+     * 否则前端拿到的是 200 + HTML，request() 去 JSON.parse 会报一个
+     * 和真实原因毫无关系的错。
+     */
+    app.all('/api/*', (c) =>
+      c.json({ error: 'not_found', message: `接口 ${c.req.path} 不存在` }, 404),
+    )
+
+    app.use('/*', serveStatic({ root }))
+    // 直接敲根路径或任意路径时回 index.html
+    app.get('*', serveStatic({ path: 'index.html', root }))
+  }
 
   return app
 }

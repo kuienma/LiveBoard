@@ -110,12 +110,16 @@ const exportQueue = new ExportQueue({
 // 启动时清一次残留文件：上次进程被杀掉时可能留下半成品
 void exportQueue.prune()
 
+// 生产环境把前端构建产物一起托管，前后端同源、只开一个端口
+const webDist = process.env['WEB_DIST']
+
 const app = createApp({
   provider: createProvider(config),
   config,
   rateLimiter: limiter,
   db,
   exportQueue,
+  ...(webDist === undefined ? {} : { webDist }),
 })
 const port = Number.parseInt(process.env['PORT'] ?? '8787', 10)
 
@@ -127,6 +131,12 @@ serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, (info) => {
   console.log(`训练库：    ${resolve(dbPath)}`)
   console.log(`导出目录：  ${resolve(exportDir)}`)
   console.log(`配音：      ${tts.note}`)
+  console.log(
+    webDist === undefined
+      ? '前端：      未托管（开发时用 pnpm dev，Vite 代理 /api）'
+      : `前端：      ${resolve(webDist)}`,
+  )
+  console.log(`限频：      识别接口每 IP 每小时 ${process.env['RECOGNIZE_RATE_LIMIT_PER_HOUR'] ?? '20'} 次`)
   const fonts = findCjkFonts()
   console.log(
     fonts.length === 0
