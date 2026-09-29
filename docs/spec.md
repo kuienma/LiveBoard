@@ -63,7 +63,7 @@ Sep 28, 2026 · @kuienma
     "title": "从侧边进攻",
     "source": "第3章 运球",
     "category": "dribbling",
-    "coachingPoints": ["防守者必须信心十足地快速跑向球，同时积极防守"]
+    "coachingPoints": ["防守者要积极上抢，快速逼近持球人"]
   },
   "field": { "width": 20, "height": 15, "style": "grass" },
   "objects": [
