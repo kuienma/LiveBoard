@@ -1,0 +1,38 @@
+services:
+  liveboard:
+    build: .
+    image: liveboard
+    container_name: liveboard
+    restart: unless-stopped
+
+    # 密钥从 .env 注入，不进镜像也不进仓库
+    env_file:
+      - .env
+
+    environment:
+      # 容器内固定这些路径；.env 里写的同名变量不该覆盖它们，
+      # 所以在这里显式声明（environment 的优先级高于 env_file）
+      PORT: 8787
+      WEB_DIST: /app/apps/web/dist
+      DB_PATH: /data/drills.db
+      EXPORT_DIR: /data/exports
+      TTS_CACHE_DIR: /data/tts-cache
+
+    # 让容器能访问宿主机上的服务。大模型网关如果跑在宿主机，
+    # AI_BASE_URL 要写 http://host.docker.internal:38080 ——
+    # 容器里的 127.0.0.1 是容器自己，不是宿主机。
+    # Docker Desktop 自带这个名字，Linux 上要靠下面这行才有。
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+    ports:
+      # 只绑局域网/本机可达的端口。现阶段自己用，不做公网暴露。
+      # 想让同一 WiFi 下的手机访问，这样就够了。
+      - '8787:8787'
+
+    volumes:
+      # 训练库、导出的视频、配音缓存都在这里，删容器不丢数据
+      - liveboard-data:/data
+
+volumes:
+  liveboard-data:

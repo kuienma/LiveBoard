@@ -37,6 +37,21 @@ API 已启动：http://localhost:8787
 限频：      识别接口每 IP 每小时 20 次
 ```
 
+### 容器里访问宿主机上的网关
+
+如果大模型网关跑在**宿主机**上，`.env` 里的地址要改：
+
+```diff
+- AI_BASE_URL=http://127.0.0.1:38080
++ AI_BASE_URL=http://host.docker.internal:38080
+```
+
+容器里的 `127.0.0.1` 是容器自己，不是宿主机 —— 照原样填会连不上，
+识别功能直接失效。`docker-compose.yml` 里已经配了 `extra_hosts`，
+所以 Linux 上也认 `host.docker.internal`（Docker Desktop 自带）。
+
+网关本来就在另一台机器上的话，填那台机器的地址即可，不受此影响。
+
 数据（训练库、导出的视频、配音缓存）都在 `liveboard-data` 卷里的 `/data`，
 删容器不丢数据。备份就是把卷里的 `drills.db` 拷出来，或在训练库页点「导出全部备份」。
 

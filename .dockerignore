@@ -1,0 +1,28 @@
+# 依赖与产物都在镜像里重新装/重新构建
+node_modules
+**/node_modules
+apps/web/dist
+out
+dist
+coverage
+*.tsbuildinfo
+
+# 绝不打进镜像：密钥走 compose 的 env_file 注入
+.env
+.env.*
+!.env.example
+
+# 运行期数据挂卷，不进镜像
+data
+**/data
+
+# 书页素材内容来自出版物
+fixtures/pages/*
+!fixtures/pages/README.md
+
+.git
+.github
+*.log
+.DS_Store
+.vscode
+.idea
