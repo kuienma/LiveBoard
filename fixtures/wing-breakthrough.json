@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "转身后向边路突破",
+    "source": "第4章 突破",
+    "category": "dribbling",
+    "coachingPoints": [
+      "转身瞬间用身体挡住防守者的视线",
+      "转身后第一步要加速，不给防守者回追的时间"
+    ]
+  },
+  "field": { "width": 24, "height": 18, "style": "grass" },
+  "objects": [
+    { "id": "home", "type": "cone", "color": "orange", "pos": [12, 16] },
+    { "id": "post", "type": "cone", "color": "red", "size": "tall", "pos": [12, 8] },
+    { "id": "gateA", "type": "cone", "color": "yellow", "pos": [6, 3] },
+    { "id": "gateB", "type": "cone", "color": "yellow", "pos": [18, 3] }
+  ],
+  "actors": [
+    { "id": "A", "role": "attacker", "label": "A", "team": "red" },
+    { "id": "D", "role": "defender", "label": "D", "team": "white" },
+    { "id": "coach", "role": "coach", "pos": [21, 14] }
+  ],
+  "balls": [{ "id": "ball", "owner": "A" }],
+  "variants": [
+    {
+      "id": "basic",
+      "name": "基本练法",
+      "description": "防守者从一侧压上，进攻者在高锥桶前转身 90 度，从另一侧的门出球",
+      "setup": {
+        "A": { "at": "home", "offset": [0, -0.7] },
+        "D": { "at": "gateB", "offset": [0, 0.9] }
+      },
+      "phases": [
+        {
+          "duration": 2.2,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "post", "offset": [0, 1.3] } },
+            { "actor": "D", "type": "run", "to": { "toward": "post", "stopShort": 2.5 } }
+          ]
+        },
+        {
+          "duration": 0.8,
+          "slowMotion": true,
+          "actions": [
+            { "actor": "A", "type": "turn", "degrees": 90, "awayFrom": "D" },
+            { "actor": "D", "type": "run", "to": { "toward": "post", "stopShort": 1.4 } }
+          ]
+        },
+        {
+          "duration": 2.6,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "gateA", "offset": [0, 0.8] } },
+            { "actor": "D", "type": "run", "to": { "at": "gateB", "offset": [0, 0.9] } }
+          ]
+        }
+      ],
+      "repeat": { "times": 3, "swap": ["gateA", "gateB"] }
+    }
+  ]
+}

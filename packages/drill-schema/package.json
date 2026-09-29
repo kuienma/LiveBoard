@@ -1,0 +1,13 @@
+{
+  "name": "@drill/schema",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Drill JSON 的 Zod 定义、TypeScript 类型与业务校验规则",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

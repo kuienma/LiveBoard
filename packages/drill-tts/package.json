@@ -1,0 +1,10 @@
+{
+  "name": "@drill/tts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "文字转语音：提供商抽象 + 按内容缓存（导出视频的中文配音）",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

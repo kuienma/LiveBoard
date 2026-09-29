@@ -1,0 +1,13 @@
+{
+  "name": "@drill/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "纯函数：Drill JSON → 时间线，给定 t 返回各对象状态",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@drill/schema": "workspace:*"
+  }
+}

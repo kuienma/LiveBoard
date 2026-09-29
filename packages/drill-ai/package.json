@@ -1,0 +1,19 @@
+{
+  "name": "@drill/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "书页识别：多协议大模型适配 + 校验重试",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@drill/schema": "workspace:*",
+    "openai": "^7.23.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@drill/engine": "workspace:*"
+  }
+}

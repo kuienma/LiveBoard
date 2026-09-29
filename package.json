@@ -1,0 +1,29 @@
+{
+  "name": "liveboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "足球训练图转战术板动画",
+  "scripts": {
+    "dev": "pnpm --filter @drill/web dev",
+    "build": "pnpm --filter @drill/web build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json",
+    "recognize": "tsx --env-file=.env packages/drill-ai/scripts/recognize.ts",
+    "probe": "node --env-file=.env packages/drill-ai/scripts/probe.ts",
+    "dev:api": "pnpm --filter @drill/server dev",
+    "dev:all": "pnpm --parallel --filter @drill/server --filter @drill/web dev",
+    "inspect": "tsx packages/drill-ai/scripts/inspect.ts",
+    "eval": "tsx --env-file=.env packages/drill-ai/scripts/evaluate.ts",
+    "preview:export": "tsx packages/drill-export/scripts/preview.ts",
+    "preview:voice": "tsx packages/drill-export/scripts/preview-voice.ts",
+    "probe:tts": "tsx --env-file=.env packages/drill-tts/scripts/probe.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

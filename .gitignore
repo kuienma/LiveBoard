@@ -1,0 +1,38 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 构建产物
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# 测试与覆盖率
+coverage/
+test-results/
+playwright-report/
+
+# 环境变量（密钥只存后端环境变量，见 docs/spec.md 第 7 节）
+.env
+.env.*
+!.env.example
+
+# 训练库数据
+data/
+
+# 书页素材：内容来自出版物，不进仓库（docs/spec.md 第 7 节：
+# 不长期保存原始书页照片、不对外展示书中原文）。
+# 评测脚本读本地目录，缺了会提示而不是报错。
+fixtures/pages/*
+!fixtures/pages/README.md
+
+# 缓存
+.vite/
+.cache/
+*.log
+
+# 编辑器 / 系统
+.DS_Store
+.vscode/
+.idea/

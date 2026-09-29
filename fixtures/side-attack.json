@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "从侧边进攻",
+    "source": "第3章 运球",
+    "category": "dribbling",
+    "coachingPoints": ["防守者必须信心十足地快速跑向球，同时积极防守"]
+  },
+  "field": { "width": 20, "height": 15, "style": "grass" },
+  "objects": [
+    { "id": "start", "type": "cone", "color": "orange", "pos": [10, 13] },
+    { "id": "mid", "type": "cone", "color": "red", "size": "tall", "pos": [10, 3] },
+    { "id": "left", "type": "cone", "color": "orange", "pos": [4, 3] },
+    { "id": "right", "type": "cone", "color": "orange", "pos": [16, 3] }
+  ],
+  "actors": [
+    { "id": "A", "role": "attacker", "label": "A", "team": "red" },
+    { "id": "B", "role": "defender", "label": "B", "team": "white" },
+    { "id": "coach", "role": "coach", "pos": [15, 12] }
+  ],
+  "balls": [{ "id": "ball", "owner": "A" }],
+  "variants": [
+    {
+      "id": "basic",
+      "name": "基本练法",
+      "description": "防守者从右边防守，在自己的锥桶和中间锥桶之间来回跑动",
+      "setup": {
+        "A": { "at": "start", "offset": [0, -0.6] },
+        "B": { "at": "right", "offset": [0, 0.8] }
+      },
+      "phases": [
+        {
+          "duration": 2.4,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "mid", "offset": [0, 1.2] } },
+            { "actor": "B", "type": "run", "to": { "at": "mid", "offset": [2, 1.5] } }
+          ]
+        },
+        {
+          "duration": 0.9,
+          "slowMotion": true,
+          "actions": [
+            { "actor": "A", "type": "turn", "degrees": 180, "awayFrom": "B" },
+            { "actor": "B", "type": "run", "to": { "at": "mid", "offset": [1.2, 1.5] } }
+          ]
+        },
+        {
+          "duration": 2.4,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "start", "offset": [0, -0.6] } },
+            { "actor": "B", "type": "run", "to": { "at": "right", "offset": [0, 0.8] } }
+          ]
+        }
+      ],
+      "repeat": { "times": 3 }
+    },
+    {
+      "id": "var1",
+      "name": "变化一",
+      "description": "防守者固定从左边防守，运球员向右边转身",
+      "setup": {
+        "A": { "at": "start", "offset": [0, -0.6] },
+        "B": { "at": "left", "offset": [0, 0.8] }
+      },
+      "phases": [
+        {
+          "duration": 2.4,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "mid", "offset": [0, 1.2] } },
+            { "actor": "B", "type": "run", "to": { "at": "mid", "offset": [-2, 1.5] } }
+          ]
+        },
+        {
+          "duration": 0.9,
+          "slowMotion": true,
+          "actions": [
+            { "actor": "A", "type": "turn", "degrees": 180, "awayFrom": "B" },
+            { "actor": "B", "type": "run", "to": { "at": "mid", "offset": [-1.2, 1.5] } }
+          ]
+        },
+        {
+          "duration": 2.4,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "start", "offset": [0, -0.6] } },
+            { "actor": "B", "type": "run", "to": { "at": "left", "offset": [0, 0.8] } }
+          ]
+        }
+      ],
+      "repeat": { "times": 3 }
+    },
+    {
+      "id": "var2",
+      "name": "变化二",
+      "description": "防守者直接跑向对面的锥桶，运球员必须不断变换转身方向",
+      "setup": {
+        "A": { "at": "start", "offset": [0, -0.6] },
+        "B": { "at": "right", "offset": [0, 0.8] }
+      },
+      "phases": [
+        {
+          "duration": 2.4,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "mid", "offset": [0, 1.2] } },
+            { "actor": "B", "type": "run", "to": { "toward": "mid", "stopShort": 2 } }
+          ]
+        },
+        {
+          "duration": 0.9,
+          "slowMotion": true,
+          "actions": [
+            { "actor": "A", "type": "turn", "degrees": 180, "awayFrom": "B" },
+            { "actor": "B", "type": "run", "to": { "toward": "mid", "stopShort": 1.2 } }
+          ]
+        },
+        {
+          "duration": 2.4,
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "start", "offset": [0, -0.6] } },
+            {
+              "actor": "B",
+              "type": "run",
+              "to": { "at": "left", "offset": [0, 0.8] },
+              "via": [{ "at": "mid", "offset": [0, -1.5] }]
+            }
+          ]
+        }
+      ],
+      "repeat": { "times": 4, "swap": ["left", "right"] }
+    }
+  ]
+}

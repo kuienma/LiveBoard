@@ -1,0 +1,14 @@
+{
+  "name": "@drill/render",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "把某一帧状态画到 Canvas 2D（播放与视频导出共用）",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@drill/engine": "workspace:*",
+    "@drill/schema": "workspace:*"
+  }
+}

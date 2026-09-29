@@ -1,0 +1,27 @@
+{
+  "name": "@drill/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "手机端网页：战术板播放器",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@drill/engine": "workspace:*",
+    "@drill/render": "workspace:*",
+    "@drill/schema": "workspace:*",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.1"
+  }
+}

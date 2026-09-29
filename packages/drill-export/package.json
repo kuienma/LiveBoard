@@ -1,0 +1,17 @@
+{
+  "name": "@drill/export",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "在 Node 里逐帧渲染 Drill 并用 ffmpeg 合成 MP4 / PNG",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@drill/engine": "workspace:*",
+    "@drill/render": "workspace:*",
+    "@drill/schema": "workspace:*",
+    "@drill/tts": "workspace:*",
+    "@napi-rs/canvas": "^0.1.60"
+  }
+}

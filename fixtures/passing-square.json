@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "四角传球",
+    "source": "第5章 传球",
+    "category": "passing",
+    "coachingPoints": ["传球脚法要稳，接球前先观察下一个接球人", "传完球立刻调整站位"]
+  },
+  "field": { "width": 20, "height": 20, "style": "grass" },
+  "objects": [
+    { "id": "c1", "type": "cone", "color": "orange", "pos": [5, 5] },
+    { "id": "c2", "type": "cone", "color": "orange", "pos": [15, 5] },
+    { "id": "c3", "type": "cone", "color": "orange", "pos": [15, 15] },
+    { "id": "c4", "type": "cone", "color": "orange", "pos": [5, 15] }
+  ],
+  "actors": [
+    { "id": "A", "role": "attacker", "label": "A", "team": "red" },
+    { "id": "B", "role": "attacker", "label": "B", "team": "red" },
+    { "id": "C", "role": "attacker", "label": "C", "team": "red" },
+    { "id": "D", "role": "attacker", "label": "D", "team": "red" },
+    { "id": "coach", "role": "coach", "pos": [10, 18.5] }
+  ],
+  "balls": [{ "id": "ball", "owner": "A" }],
+  "variants": [
+    {
+      "id": "basic",
+      "name": "基本练法",
+      "description": "四名球员各站一个锥桶，球沿正方形顺时针传递一圈",
+      "setup": {
+        "A": { "at": "c1", "offset": [0, -0.8] },
+        "B": { "at": "c2", "offset": [0, -0.8] },
+        "C": { "at": "c3", "offset": [0, 0.8] },
+        "D": { "at": "c4", "offset": [0, 0.8] }
+      },
+      "phases": [
+        { "duration": 1.1, "actions": [{ "actor": "A", "type": "pass", "to": "B" }] },
+        { "duration": 1.1, "actions": [{ "actor": "B", "type": "pass", "to": "C" }] },
+        { "duration": 1.1, "actions": [{ "actor": "C", "type": "pass", "to": "D" }] },
+        { "duration": 1.1, "actions": [{ "actor": "D", "type": "pass", "to": "A" }] }
+      ],
+      "repeat": { "times": 3 }
+    },
+    {
+      "id": "var1",
+      "name": "变化一",
+      "description": "传完一圈后四人同时轮转到下一个锥桶，四轮正好各绕回原位",
+      "setup": {
+        "A": { "at": "c1", "offset": [0, -0.8] },
+        "B": { "at": "c2", "offset": [0, -0.8] },
+        "C": { "at": "c3", "offset": [0, 0.8] },
+        "D": { "at": "c4", "offset": [0, 0.8] }
+      },
+      "phases": [
+        { "duration": 1.1, "actions": [{ "actor": "A", "type": "pass", "to": "B" }] },
+        { "duration": 1.1, "actions": [{ "actor": "B", "type": "pass", "to": "C" }] },
+        { "duration": 1.1, "actions": [{ "actor": "C", "type": "pass", "to": "D" }] },
+        { "duration": 1.1, "actions": [{ "actor": "D", "type": "pass", "to": "A" }] },
+        {
+          "duration": 1.6,
+          "note": "四人同时向下一个锥桶轮转；A 刚接回球，所以用 dribble 带球过去，其余人无球跑动",
+          "actions": [
+            { "actor": "A", "type": "dribble", "to": { "at": "c2" } },
+            { "actor": "B", "type": "run", "to": { "at": "c3" } },
+            { "actor": "C", "type": "run", "to": { "at": "c4" } },
+            { "actor": "D", "type": "run", "to": { "at": "c1" } }
+          ]
+        }
+      ],
+      "repeat": { "times": 4, "rotate": ["c1", "c2", "c3", "c4"] }
+    }
+  ]
+}
