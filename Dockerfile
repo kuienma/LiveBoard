@@ -49,6 +49,10 @@ RUN apt-get update \
 COPY --from=build /app /app
 
 ENV NODE_ENV=production
+# 让服务知道自己在容器里：指向回环地址的 AI_BASE_URL / VOLCANO_TTS_BASE_URL
+# 会被自动改写成 host.docker.internal（容器里的 127.0.0.1 是容器自己）。
+# 比探测 /.dockerenv 可靠——podman 之类不一定有那个文件。
+ENV IN_CONTAINER=1
 # 前端产物由服务端一起托管，只开一个端口（同源，也是 PWA 的前提）
 ENV WEB_DIST=/app/apps/web/dist
 # 数据全部落在 /data，compose 里挂成卷

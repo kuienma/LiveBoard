@@ -18,10 +18,10 @@ services:
       EXPORT_DIR: /data/exports
       TTS_CACHE_DIR: /data/tts-cache
 
-    # 让容器能访问宿主机上的服务。大模型网关如果跑在宿主机，
-    # AI_BASE_URL 要写 http://host.docker.internal:38080 ——
-    # 容器里的 127.0.0.1 是容器自己，不是宿主机。
-    # Docker Desktop 自带这个名字，Linux 上要靠下面这行才有。
+    # 让容器能访问宿主机上的服务：.env 里写 http://127.0.0.1:38080 的网关地址，
+    # 服务启动时会自动改写成 host.docker.internal 并在日志里说明，
+    # 所以一份 .env 本机跑和容器跑都不用改。
+    # Docker Desktop 自带这个主机名，Linux 上要靠下面这行才有。
     extra_hosts:
       - 'host.docker.internal:host-gateway'
 

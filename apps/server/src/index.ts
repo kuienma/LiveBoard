@@ -10,13 +10,28 @@ import {
 import { createProvider, describeConfig, loadAiConfig, MissingCredentialError } from '@drill/ai'
 import { createApp } from './app.js'
 import { resolve } from 'node:path'
+import { rewriteLoopbackForContainer } from './containerEnv.js'
 import { openDb } from './db/index.js'
 import { ExportQueue } from './exportQueue.js'
 import { RateLimiter } from './rateLimit.js'
 
+/**
+ * 容器里把指向回环地址的服务地址改写成 host.docker.internal。
+ *
+ * 这样一份 .env 本机跑和容器跑都不用改：`http://127.0.0.1:38080` 在本机
+ * 就是本机，在容器里自动指向宿主机。外部地址不受影响，改了什么下面会打出来。
+ */
+const { env: runtimeEnv, rewrites } = rewriteLoopbackForContainer(process.env, [
+  'AI_BASE_URL',
+  'VOLCANO_TTS_BASE_URL',
+])
+// 同时写回 process.env：否则在容器里跑 pnpm probe 之类的脚本时，
+// 它们读到的还是没改写过的回环地址，报「连不上」而看不出原因
+for (const rewrite of rewrites) process.env[rewrite.key] = rewrite.to
+
 let config
 try {
-  config = loadAiConfig()
+  config = loadAiConfig(runtimeEnv)
 } catch (error) {
   if (error instanceof MissingCredentialError) {
     console.error(`✗ ${error.message}`)
@@ -41,35 +56,35 @@ const db = openDb(dbPath)
  * 不配置就没有配音能力：界面上仍可勾选，但会导出无声视频并说明原因。
  */
 async function createTts(): Promise<{ provider?: TtsProvider; note: string }> {
-  const kind = process.env['TTS_PROVIDER']
+  const kind = runtimeEnv['TTS_PROVIDER']
   if (kind === undefined || kind === 'none') return { note: '未配置（导出为无声视频）' }
 
   if (kind === 'volcano') {
-    const speaker = process.env['TTS_VOICE']
+    const speaker = runtimeEnv['TTS_VOICE']
     if (speaker === undefined || speaker.trim() === '') {
       return { note: '缺少 TTS_VOICE（发音人/音色名），已按未配置处理' }
     }
     try {
       const provider = new VolcanoTtsProvider({
         speaker,
-        ...(process.env['VOLCANO_TTS_BASE_URL'] === undefined
+        ...(runtimeEnv['VOLCANO_TTS_BASE_URL'] === undefined
           ? {}
-          : { baseUrl: process.env['VOLCANO_TTS_BASE_URL'] }),
-        ...(process.env['VOLCANO_TTS_TRANSPORT'] === undefined
+          : { baseUrl: runtimeEnv['VOLCANO_TTS_BASE_URL'] }),
+        ...(runtimeEnv['VOLCANO_TTS_TRANSPORT'] === undefined
           ? {}
-          : { transport: process.env['VOLCANO_TTS_TRANSPORT'] as 'sse' | 'chunked' }),
-        ...(process.env['VOLCANO_TTS_RESOURCE_ID'] === undefined
+          : { transport: runtimeEnv['VOLCANO_TTS_TRANSPORT'] as 'sse' | 'chunked' }),
+        ...(runtimeEnv['VOLCANO_TTS_RESOURCE_ID'] === undefined
           ? {}
-          : { resourceId: process.env['VOLCANO_TTS_RESOURCE_ID'] }),
-        ...(process.env['VOLCANO_TTS_API_KEY'] === undefined
+          : { resourceId: runtimeEnv['VOLCANO_TTS_RESOURCE_ID'] }),
+        ...(runtimeEnv['VOLCANO_TTS_API_KEY'] === undefined
           ? {}
-          : { apiKey: process.env['VOLCANO_TTS_API_KEY'] }),
-        ...(process.env['VOLCANO_TTS_APP_ID'] === undefined
+          : { apiKey: runtimeEnv['VOLCANO_TTS_API_KEY'] }),
+        ...(runtimeEnv['VOLCANO_TTS_APP_ID'] === undefined
           ? {}
-          : { appId: process.env['VOLCANO_TTS_APP_ID'] }),
-        ...(process.env['VOLCANO_TTS_ACCESS_KEY'] === undefined
+          : { appId: runtimeEnv['VOLCANO_TTS_APP_ID'] }),
+        ...(runtimeEnv['VOLCANO_TTS_ACCESS_KEY'] === undefined
           ? {}
-          : { accessKey: process.env['VOLCANO_TTS_ACCESS_KEY'] }),
+          : { accessKey: runtimeEnv['VOLCANO_TTS_ACCESS_KEY'] }),
         // 按字符计费，每次调用都记一笔（docs/spec.md 第 7 节）
         onUsage: ({ characters, text }) => {
           console.log(`[tts] 计费字符=${characters} 文本=「${text.slice(0, 30)}」`)
@@ -78,7 +93,7 @@ async function createTts(): Promise<{ provider?: TtsProvider; note: string }> {
       const cacheDir = process.env['TTS_CACHE_DIR'] ?? 'data/tts-cache'
       return {
         provider: new CachingTtsProvider(provider, cacheDir),
-        note: `火山引擎 ${process.env['VOLCANO_TTS_RESOURCE_ID'] ?? 'seed-tts-2.0'}，音色 ${speaker}（缓存目录 ${cacheDir}）`,
+        note: `火山引擎 ${runtimeEnv['VOLCANO_TTS_RESOURCE_ID'] ?? 'seed-tts-2.0'}，音色 ${speaker}（缓存目录 ${cacheDir}）`,
       }
     } catch (error) {
       return { note: `火山引擎配置有误：${error instanceof Error ? error.message : String(error)}` }
@@ -137,6 +152,13 @@ serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, (info) => {
       : `前端：      ${resolve(webDist)}`,
   )
   console.log(`限频：      识别接口每 IP 每小时 ${process.env['RECOGNIZE_RATE_LIMIT_PER_HOUR'] ?? '20'} 次`)
+  for (const rewrite of rewrites) {
+    // 静默改写配置会让人对着一个「明明写对了」的地址查半天
+    console.log(
+      `↻ 容器内改写 ${rewrite.key}：${rewrite.from} → ${rewrite.to}` +
+        '（容器里的 127.0.0.1 是容器自己；不想改写就设 DISABLE_LOOPBACK_REWRITE=1）',
+    )
+  }
   const fonts = findCjkFonts()
   console.log(
     fonts.length === 0

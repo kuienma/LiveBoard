@@ -37,20 +37,22 @@ API 已启动：http://localhost:8787
 限频：      识别接口每 IP 每小时 20 次
 ```
 
-### 容器里访问宿主机上的网关
+### 容器里访问宿主机上的网关（自动处理，无需改配置）
 
-如果大模型网关跑在**宿主机**上，`.env` 里的地址要改：
+如果大模型网关跑在**宿主机**上，`.env` 里照常写 `http://127.0.0.1:38080` 就行。
+容器里的 `127.0.0.1` 是容器自己，所以服务启动时会自动把回环地址改写成
+`host.docker.internal`，并在日志里说明：
 
-```diff
-- AI_BASE_URL=http://127.0.0.1:38080
-+ AI_BASE_URL=http://host.docker.internal:38080
+```
+↻ 容器内改写 AI_BASE_URL：http://127.0.0.1:38080 → http://host.docker.internal:38080
 ```
 
-容器里的 `127.0.0.1` 是容器自己，不是宿主机 —— 照原样填会连不上，
-识别功能直接失效。`docker-compose.yml` 里已经配了 `extra_hosts`，
-所以 Linux 上也认 `host.docker.internal`（Docker Desktop 自带）。
+边界很窄：只在容器内、且主机名确实是回环地址（`127.0.0.1` / `localhost` / `::1`）
+时才动，端口和路径原样保留，**外部地址一律不碰**。不想要这个行为就设
+`DISABLE_LOOPBACK_REWRITE=1`。
 
-网关本来就在另一台机器上的话，填那台机器的地址即可，不受此影响。
+同时作用于 `AI_BASE_URL` 和 `VOLCANO_TTS_BASE_URL`。网关本来就在另一台机器上的话
+填那台机器的地址即可，不受影响。
 
 数据（训练库、导出的视频、配音缓存）都在 `liveboard-data` 卷里的 `/data`，
 删容器不丢数据。备份就是把卷里的 `drills.db` 拷出来，或在训练库页点「导出全部备份」。
