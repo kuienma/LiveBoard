@@ -6,11 +6,6 @@ import { EXPORT_SIZES, type Orientation } from './frames.js'
 
 const BACKGROUND = '#0a0a0a'
 
-/** 采样间隔（秒）。0.1 足够画出曲线，又不会让点多到没必要。 */
-const SAMPLE_STEP = 0.1
-/** 相邻采样点近于这个距离（米）就合并，避免原地不动时堆出上百个重合点。 */
-const MIN_POINT_GAP = 0.25
-
 export interface StillOptions {
   orientation: Orientation
   /** 在角上标练法名，默认标：静态图往往要单独发给别人看。 */
@@ -53,27 +48,46 @@ export function renderStillPng(drill: Drill, variantId: string, options: StillOp
   return canvas.toBuffer('image/png')
 }
 
-/** 把第一轮全程的位置采成每人一条折线。 */
+/**
+ * 取第一轮全程的路线，每人可能有多段（带球和无球跑动线形不同）。
+ *
+ * 直接读时间线的分段，而不是按时间采样球员位置：
+ * 分段里的 points 已经是平滑后的密集折线，采样只会更粗糙，
+ * 而且采样拿不到「这段是不是带球」这个信息。
+ */
 function buildRoundTrails(timeline: ReturnType<typeof compileVariant>): TrailFrame[] {
-  const roundEnd = timeline.segments
-    .filter((segment) => segment.roundIndex === 0)
-    .reduce((max, segment) => Math.max(max, segment.endTime), 0)
+  const trails: TrailFrame[] = []
 
-  const points = new Map<string, Vec2[]>()
-  for (let time = 0; time <= roundEnd + 1e-6; time += SAMPLE_STEP) {
-    for (const actor of sampleTimeline(timeline, Math.min(time, roundEnd)).actors) {
-      const list = points.get(actor.id) ?? []
-      const last = list.at(-1)
-      if (last === undefined || distance(last, actor.pos) >= MIN_POINT_GAP) {
-        list.push(actor.pos)
-      }
-      points.set(actor.id, list)
+  for (const segment of timeline.segments) {
+    if (segment.roundIndex !== 0) continue
+
+    for (const motion of segment.actors) {
+      if (!motion.moving || motion.points.length < 2) continue
+
+      // 同一个人、同样带球状态、首尾相接就接上，让线形连续
+      const last = trails.at(-1)
+      const joins =
+        last !== undefined &&
+        last.actorId === motion.actorId &&
+        last.withBall === motion.withBall &&
+        samePoint(last.points.at(-1), motion.points[0])
+
+      if (joins) last.points.push(...motion.points.slice(1))
+      else
+        trails.push({
+          actorId: motion.actorId,
+          points: [...motion.points],
+          withBall: motion.withBall,
+        })
     }
   }
 
-  return [...points]
-    .filter(([, list]) => list.length >= 2)
-    .map(([actorId, list]) => ({ actorId, points: list }))
+  return trails
+}
+
+function samePoint(a: Vec2 | undefined, b: Vec2 | undefined): boolean {
+  if (a === undefined || b === undefined) return false
+  return Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1]) < 1e-6
 }
 
 function distance(a: Vec2, b: Vec2): number {

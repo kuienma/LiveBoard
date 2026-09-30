@@ -1,6 +1,7 @@
 import type { ActorFrame, FrameState, TurnHighlightFrame } from '@drill/engine'
 import type { DrillObject, Vec2 } from '@drill/schema'
 import { CJK_FONT_STACK, objectColors, theme } from './theme.js'
+import { waveAlongPolyline } from './wave.js'
 
 /**
  * 作图需要的 Canvas 2D 子集。
@@ -193,18 +194,29 @@ function drawTrails(ctx: DrawContext, frame: FrameState, layout: Layout): void {
   ctx.lineJoin = 'round'
   ctx.lineWidth = Math.max(1.5, theme.size.trailWidth * layout.scale)
   const dash = Math.max(3, 0.32 * layout.scale)
-  ctx.setLineDash([dash, dash * 0.8])
 
   for (const trail of frame.trails) {
     if (trail.points.length < 2) continue
     const role = roleById.get(trail.actorId) ?? 'neutral'
     ctx.strokeStyle = theme.trail[role]
 
+    /**
+     * 战术图的约定：带球是波浪线、无球跑动是虚线。
+     * 波浪本身已经足够醒目，再叠虚线会糊成一团，所以带球画实线波浪。
+     */
+    const points = trail.withBall
+      ? waveAlongPolyline(trail.points, {
+          wavelength: theme.size.dribbleWavelength,
+          amplitude: theme.size.dribbleAmplitude,
+        })
+      : trail.points
+    ctx.setLineDash(trail.withBall ? [] : [dash, dash * 0.8])
+
     ctx.beginPath()
-    const [startX, startY] = layout.toPx(trail.points[0]!)
+    const [startX, startY] = layout.toPx(points[0]!)
     ctx.moveTo(startX, startY)
-    for (let i = 1; i < trail.points.length; i++) {
-      const [px, py] = layout.toPx(trail.points[i]!)
+    for (let i = 1; i < points.length; i++) {
+      const [px, py] = layout.toPx(points[i]!)
       ctx.lineTo(px, py)
     }
     ctx.stroke()

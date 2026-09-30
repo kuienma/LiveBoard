@@ -38,6 +38,8 @@ export interface BallFrame {
 export interface TrailFrame {
   actorId: string
   points: Vec2[]
+  /** 这一段是带球还是无球跑动。渲染层据此决定画波浪线还是直虚线。 */
+  withBall: boolean
 }
 
 /** 慢放阶段的转身高亮。 */
@@ -192,7 +194,12 @@ function buildTrails(
   const current = timeline.segments[currentIndex]
   if (current === undefined) return []
 
-  const byActor = new Map<string, Vec2[]>()
+  /**
+   * 一个球员可能有多段轨迹：带球和无球跑动的线形不同，不能画成一条。
+   * 相邻阶段只要「同样带球/同样无球」且首尾相接，就合成一段——
+   * 这样虚线的节奏是连续的，不会在每个阶段边界打一个结。
+   */
+  const byActor = new Map<string, TrailFrame[]>()
 
   for (let i = 0; i <= currentIndex; i++) {
     const segment = timeline.segments[i]!
@@ -206,17 +213,29 @@ function buildTrails(
           : [...motion.points]
       if (partial.length === 0) continue
 
-      const existing = byActor.get(motion.actorId)
-      if (existing === undefined) {
-        byActor.set(motion.actorId, partial)
-        continue
+      const list = byActor.get(motion.actorId) ?? []
+      const last = list.at(-1)
+      const joins =
+        last !== undefined &&
+        last.withBall === motion.withBall &&
+        samePoint(last.points.at(-1), partial[0])
+
+      if (joins) {
+        // 上一段的终点就是这一段的起点，去掉重复点
+        last.points.push(...partial.slice(1))
+      } else {
+        list.push({ actorId: motion.actorId, points: partial, withBall: motion.withBall })
       }
-      // 上一段的终点就是这一段的起点，去掉重复点
-      existing.push(...partial.slice(1))
+      byActor.set(motion.actorId, list)
     }
   }
 
-  return [...byActor].map(([actorId, points]) => ({ actorId, points }))
+  return [...byActor.values()].flat()
+}
+
+function samePoint(a: Vec2 | undefined, b: Vec2 | undefined): boolean {
+  if (a === undefined || b === undefined) return false
+  return Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1]) < 1e-6
 }
 
 function buildTurnHighlight(

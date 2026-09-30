@@ -54,6 +54,11 @@ export interface ActorMotion {
    */
   easeIn: boolean
   easeOut: boolean
+  /**
+   * 这段移动是否带球。
+   * 战术图的约定：带球画波浪线、无球跑动画直线，两者必须能看出区别。
+   */
+  withBall: boolean
   turn?: CompiledTurn
 }
 
@@ -186,6 +191,7 @@ export function compileVariant(drill: Drill, variantId: string): Timeline {
             moving: false,
             easeIn: true,
             easeOut: true,
+            withBall: false,
           })
           continue
         }
@@ -203,6 +209,7 @@ export function compileVariant(drill: Drill, variantId: string): Timeline {
             moving: false,
             easeIn: true,
             easeOut: true,
+            withBall: false,
             turn: {
               direction: solution.direction,
               ...(targetId === undefined ? {} : { awayFromId: targetId }),
@@ -236,6 +243,7 @@ export function compileVariant(drill: Drill, variantId: string): Timeline {
             // 默认两端缓动；连续跑动的中间阶段由 smoothSegments 改成匀速
             easeIn: true,
             easeOut: true,
+            withBall: action.type === 'dribble',
           })
           nextPositions.set(actor.id, last)
           // 跑动结束时球员面朝前进方向，必须写回，否则下一轮的转身会用到上一轮的旧朝向
@@ -252,6 +260,7 @@ export function compileVariant(drill: Drill, variantId: string): Timeline {
           moving: false,
           easeIn: true,
           easeOut: true,
+          withBall: false,
         })
       }
 

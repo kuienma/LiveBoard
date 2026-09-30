@@ -229,3 +229,55 @@ describe('纯函数', () => {
     expect(var2).toEqual(snapshot)
   })
 })
+
+describe('带球与无球的轨迹要能区分', () => {
+  it('带球段标 withBall，无球跑动段不标', () => {
+    // 基本练法阶段 1：A 带球上前、B 无球跑动
+    const frame = sampleTimeline(basic, 2.0)
+    const a = frame.trails.find((t) => t.actorId === 'A')!
+    const b = frame.trails.find((t) => t.actorId === 'B')!
+    expect(a.withBall).toBe(true)
+    expect(b.withBall).toBe(false)
+  })
+
+  it('同一个人先带球后无球时拆成两段，不会画成一条线', () => {
+    // 构造：A 先带球再无球跑（持球者用 run 会释放球权）
+    const drill = structuredClone(raw) as unknown as Record<string, unknown>
+    const variants = drill['variants'] as Array<Record<string, unknown>>
+    const basicVariant = variants[0]!
+    basicVariant['phases'] = [
+      { duration: 2, slowMotion: false, actions: [{ type: 'dribble', actor: 'A', to: [10, 8] }] },
+      { duration: 2, slowMotion: false, actions: [{ type: 'run', actor: 'A', to: [14, 8] }] },
+    ]
+    basicVariant['repeat'] = { times: 1 }
+    const parsed = parseDrill(drill)
+    if (!parsed.ok) throw new Error(`构造的数据不合法：${JSON.stringify(parsed.issues)}`)
+
+    const timeline = compileVariant(parsed.drill, basicVariant['id'] as string)
+    const trails = sampleTimeline(timeline, 3.9).trails.filter((t) => t.actorId === 'A')
+
+    expect(trails).toHaveLength(2)
+    expect(trails[0]!.withBall).toBe(true)
+    expect(trails[1]!.withBall).toBe(false)
+    // 两段首尾相接，画出来是连续的一条路线
+    expect(trails[1]!.points[0]).toEqual(trails[0]!.points.at(-1))
+  })
+
+  it('连续两个带球阶段合成一段，虚线/波浪的节奏才连续', () => {
+    const drill = structuredClone(raw) as unknown as Record<string, unknown>
+    const variants = drill['variants'] as Array<Record<string, unknown>>
+    const basicVariant = variants[0]!
+    basicVariant['phases'] = [
+      { duration: 2, slowMotion: false, actions: [{ type: 'dribble', actor: 'A', to: [10, 8] }] },
+      { duration: 2, slowMotion: false, actions: [{ type: 'dribble', actor: 'A', to: [14, 8] }] },
+    ]
+    basicVariant['repeat'] = { times: 1 }
+    const parsed = parseDrill(drill)
+    if (!parsed.ok) throw new Error('构造的数据不合法')
+
+    const timeline = compileVariant(parsed.drill, basicVariant['id'] as string)
+    const trails = sampleTimeline(timeline, 3.9).trails.filter((t) => t.actorId === 'A')
+    expect(trails).toHaveLength(1)
+    expect(trails[0]!.withBall).toBe(true)
+  })
+})

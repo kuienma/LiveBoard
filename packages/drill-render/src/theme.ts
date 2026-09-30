@@ -45,6 +45,9 @@ export const theme = {
     coneShort: 0.35,
     trailWidth: 0.09,
     lineWidth: 0.08,
+    /** 带球波浪线：一个波长 1.1 米、单侧振幅 0.26 米（20 米宽的场地上清晰可辨）。 */
+    dribbleWavelength: 1.1,
+    dribbleAmplitude: 0.26,
   },
 } as const
 
